@@ -1,0 +1,58 @@
+package com.gtolib.api.item;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+
+public final class MultiStepItemHelper {
+   public static ItemStack toMultiStepItem(ItemStack stack, int step, int max) {
+      CompoundTag nbt = stack.getOrCreateTag();
+      nbt.putInt("craft_step", max);
+      nbt.putInt("current_craft_step", step);
+      return stack;
+   }
+
+   private static ItemStack setStep(ItemStack stack, int step, int max) {
+      CompoundTag nbt = stack.getTag();
+      if (nbt != null && max != 0) {
+         nbt.putInt("current_craft_step", Math.min(max, step));
+         return stack;
+      } else {
+         throw new IllegalArgumentException("ItemStack is not a MultiStepItem");
+      }
+   }
+
+   public static ItemStack locateStep(ItemStack stack0, int step) {
+      ItemStack stack = stack0.copy();
+      stack.getTag().putInt("current_craft_step", step);
+      return stack;
+   }
+
+   public static ItemStack promoteStep(ItemStack stack) {
+      int step = getStep(stack) + 1;
+      int max = getMaxStep(stack);
+      if (step < max) {
+         return setStep(stack, step, max);
+      }
+
+      CompoundTag nbt = stack.getTag();
+      if (nbt != null) {
+         nbt.remove("craft_step");
+         nbt.remove("current_craft_step");
+         if (nbt.isEmpty()) {
+            stack.setTag(null);
+         }
+      }
+
+      return stack;
+   }
+
+   public static int getStep(ItemStack stack) {
+      CompoundTag nbt = stack.getTag();
+      return nbt == null ? 0 : nbt.getInt("current_craft_step");
+   }
+
+   public static int getMaxStep(ItemStack stack) {
+      CompoundTag nbt = stack.getTag();
+      return nbt == null ? 0 : nbt.getInt("craft_step");
+   }
+}
