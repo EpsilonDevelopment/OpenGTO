@@ -1,0 +1,58 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'dev.gto'
+version = '1.0'
+description = 'GTO Seal runtime - reverse-engineered source of gto-seal-runtime-1.0.jar'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net/' }
+}
+
+// Compile-time only stubs for classes that the native library defines at runtime
+// (native0.hidden.Hidden0 is created by JNI_OnLoad into the bootstrap class loader).
+sourceSets {
+    stub {
+        java.srcDir 'src/stub/java'
+    }
+}
+
+dependencies {
+    compileOnly 'cpw.mods:modlauncher:10.0.9'
+    compileOnly 'cpw.mods:securejarhandler:2.1.10'
+    compileOnly 'org.ow2.asm:asm:9.6'
+    compileOnly 'org.ow2.asm:asm-tree:9.6'
+    compileOnly 'org.slf4j:slf4j-api:2.0.1'
+    compileOnly 'org.jetbrains:annotations:24.0.1'
+    compileOnly sourceSets.stub.output
+}
+
+tasks.named('compileStubJava') {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('compileStubJava')
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+tasks.named('jar') {
+    archiveBaseName = 'gto-seal-runtime'
+    archiveClassifier = ''
+    manifest {
+        attributes(
+            'Implementation-Title': 'gto-seal-runtime',
+            'Implementation-Version': project.version
+        )
+    }
+}
